@@ -1,74 +1,18 @@
-const CACHE = "basa-track-v9";
-const ASSETS = [
-  "./manifest.json",
-  "./icon-192.png",
-  "./icon-512.png",
-  "./cloud-sync.js"
-];
+const CACHE = "basa-track-v10";
+const ASSETS = ["./manifest.json","./icon-192.png","./icon-512.png","./cloud-sync.js"];
 
-async function patchDocument(response, request) {
-  const contentType = response.headers.get("content-type") || "";
-  if (!contentType.includes("text/html")) return response;
-  const text = await response.text();
-  const url = new URL(request.url);
-  let patched = text;
-
-  // Inject AFTER the full BASA-Track application so cloud-sync.js can see
-  // and wrap the app's existing login/save/teacher functions.
-  if (url.hostname.endsWith("github.io")) {
-    const syncSrc = new URL("/Basa-Track/cloud-sync.js", url.origin).href;
-    if (!text.includes("/Basa-Track/cloud-sync.js")) {
-      patched = patched.replace(/<\/body>/i, '<script src="' + syncSrc + '"></script></body>');
-    }
+async function patchDocument(response, request){
+  const contentType=response.headers.get("content-type")||"";
+  if(!contentType.includes("text/html")) return response;
+  const text=await response.text();
+  const url=new URL(request.url);
+  let patched=text;
+  if(url.hostname.endsWith("github.io") && !text.includes("basa-cloud-bootstrap")){
+    const bootstrap=`<script id="basa-cloud-bootstrap">(function(){function load(){if(window.__basaCloudLoaded)return;if(typeof window.login==='function'&&typeof window.save==='function'&&typeof window.teacher==='function'){window.__basaCloudLoaded=true;var s=document.createElement('script');s.id='basa-cloud-sync-script';s.src='/Basa-Track/cloud-sync.js';s.onload=function(){if(new URL(location.href).searchParams.get('learner')==='1'){try{document.querySelectorAll('#home button').forEach(function(b,i){if(i===1||/Teacher Dashboard/i.test(b.textContent||''))b.style.display='none'});['teacher','teacherLogin','pupilManager','rosterEditor','teacherBackBtn'].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display='none'});if(typeof window.show==='function')window.show('login')}catch(e){}}};document.body.appendChild(s);}else{setTimeout(load,50);}}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',load)}else{load()}})();</script>`;
+    patched=patched.replace(/<\/body>/i,bootstrap+'</body>');
   }
-
-  // Learner-only presentation layer. The original reading materials remain untouched.
-  if (url.searchParams.get("learner") === "1") {
-    patched = patched.replace(/<\/head>/i,
-      '<style id="basa-learner-only">#home button:nth-of-type(2),#teacher,#teacherLogin,#pupilManager,#rosterEditor,#teacherBackBtn{display:none!important}</style></head>');
-    patched = patched.replace(/<\/body>/i,
-      '<script>(function(){function hide(){try{document.querySelectorAll("#home button").forEach(function(b,i){if(i===1||/Teacher Dashboard/i.test(b.textContent||""))b.style.display="none"});["teacher","teacherLogin","pupilManager","rosterEditor","teacherBackBtn"].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display="none"});}catch(e){}}setTimeout(hide,100);setTimeout(hide,700);setTimeout(hide,1800);new MutationObserver(hide).observe(document.documentElement,{subtree:true,childList:true,attributes:true});})();</script></body>');
-  }
-
-  const headers = new Headers(response.headers);
-  headers.set("content-type", "text/html; charset=utf-8");
-  return new Response(patched, {headers, status: response.status, statusText: response.statusText});
+  return new Response(patched,{headers:{...Object.fromEntries(response.headers.entries()),"content-type":"text/html; charset=utf-8"},status:response.status,statusText:response.statusText});
 }
-
-self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
-  self.skipWaiting();
-});
-
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-  );
-  self.clients.claim();
-});
-
-self.addEventListener("fetch", event => {
-  if (event.request.method !== "GET") return;
-  const isDocument = event.request.destination === "document" || (event.request.headers.get("accept") || "").includes("text/html");
-  if (isDocument) {
-    event.respondWith(
-      fetch(event.request).then(async response => {
-        const patched = await patchDocument(response.clone(), event.request);
-        const cache = await caches.open(CACHE);
-        await cache.put(event.request, patched.clone());
-        return patched;
-      }).catch(() => caches.match(event.request))
-    );
-    return;
-  }
-  event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request).then(response => {
-        const copy = response.clone();
-        caches.open(CACHE).then(cache => cache.put(event.request, copy));
-        return response;
-      });
-    })
-  );
-});
+self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));self.skipWaiting()});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim()});
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const doc=e.request.destination==='document'||(e.request.headers.get('accept')||'').includes('text/html');if(doc){e.respondWith(fetch(e.request).then(r=>patchDocument(r.clone(),e.request)).catch(()=>caches.match(e.request)));return}e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{const cp=r.clone();caches.open(CACHE).then(x=>x.put(e.request,cp));return r})))})
