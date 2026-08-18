@@ -18,7 +18,25 @@ if(typeof origShow==='function')window.show=function(id){if(id==='teacher'&&clou
 if(typeof origLogin==='function')window.login=async function(){const id=document.getElementById('lid').value.trim().toUpperCase(),pin=document.getElementById('pin').value;try{await cloudLogin(id,pin);origLogin()}catch(e){document.getElementById('msg').textContent='Maling Learner ID o PIN o hindi available online.'}};
 if(typeof origSave==='function')window.save=function(d){const r=origSave.apply(this,arguments),id=cloudLearnerId;if(cloudToken&&cloudRole==='learner'&&id&&d&&d[id])syncLearnerState(id,d[id]);return r};
 if(typeof origLearnerHome==='function')window.learnerHome=function(){if(cloudRole==='learner'&&cloudLearnerId){refreshLearner(cloudLearnerId,true);return}return origLearnerHome.apply(this,arguments)};
-async function refreshTeacher(){if(cloudRole!=='teacher')return;try{const r=await api('list_pupils');const d=localState();if(typeof DATA!=='undefined'){DATA.learners={};(r.pupils||[]).forEach(p=>{DATA.learners[p.learner_id]={name:p.display_name,pin:''};d[p.learner_id]=p.state||{}});if(typeof saveRoster==='function')saveRoster()}(r.pupils||[]).forEach(p=>{d[p.learner_id]=p.state||{}});putLocalState(d);if(typeof origTeacher==='function')origTeacher();hideOnlineAdminTools()}catch(e){console.warn('BASA teacher refresh:',e.message)}}
+function renderCloudTeacher(pupils){
+  const rows=[];
+  (pupils||[]).forEach(p=>{
+    const s=p.state||{},mar=s.mar||{},cl=s.cl||{},pg=s.pg||{};
+    const marPct=Math.min(100,Math.round((Array.isArray(mar.done)?mar.done.length:0)/26*100));
+    const clTotal=(typeof DATA!=='undefined'&&DATA.claveria&&Array.isArray(DATA.claveria.checkpoints))?DATA.claveria.checkpoints.length:1;
+    const pgTotal=(typeof DATA!=='undefined'&&DATA.pagbasa&&Array.isArray(DATA.pagbasa.checkpoints))?DATA.pagbasa.checkpoints.length:1;
+    const clPct=Math.min(100,Math.round((Number(cl.validated)||0)/clTotal*100));
+    const pgPct=Math.min(100,Math.round((Number(pg.validated)||0)/pgTotal*100));
+    let approval='No pending approval';
+    if(mar.pending&&!mar.approved) approval='<button class="green" onclick="apMar(\''+p.learner_id+'\')">Approve Marungko CP '+((Number(mar.validated)||0)+1)+'</button>';
+    else if(cl.pending) approval='<button class="green" onclick="apCl(\''+p.learner_id+'\')">Approve Claveria CP '+(cl.cp||1)+'</button>';
+    else if(pg.pending) approval='<button class="green" onclick="apPg(\''+p.learner_id+'\')">Approve Pagbasa CP '+(pg.cp||1)+'</button>';
+    rows.push('<tr><td><b>'+String(p.display_name||'Pupil')+'</b><br>'+String(p.learner_id)+'</td><td>'+String(s.lastLogin||'—')+'</td><td>Marungko '+marPct+'%<br>Claveria '+clPct+'%<br>Pagbasa '+pgPct+'%</td><td>'+approval+'</td></tr>');
+  });
+  const dash=document.getElementById('dash');
+  if(dash)dash.innerHTML='<table><tr><th>Learner</th><th>Last Access</th><th>Progress</th><th>Teacher Validation</th></tr>'+rows.join('')+'</table>';
+}
+async function refreshTeacher(){if(cloudRole!=='teacher')return;try{const r=await api('list_pupils');const d=localState();if(typeof DATA!=='undefined'){DATA.learners={};(r.pupils||[]).forEach(p=>{DATA.learners[p.learner_id]={name:p.display_name,pin:'0000'};d[p.learner_id]=p.state||{}});if(typeof saveRoster==='function')saveRoster()}(r.pupils||[]).forEach(p=>{d[p.learner_id]=p.state||{}});putLocalState(d);renderCloudTeacher(r.pupils||[]);hideOnlineAdminTools()}catch(e){console.warn('BASA teacher refresh:',e.message);const dash=document.getElementById('dash');if(dash)dash.innerHTML='<div class="status">Cloud error: '+e.message+'</div>';}}
 if(typeof origTeacher==='function')window.teacher=function(){const r=origTeacher.apply(this,arguments);if(cloudRole==='teacher'){hideOnlineAdminTools();setTimeout(refreshTeacher,250)}return r};
 ['apMar','apCl','apPg','resetPupilProgress'].forEach(fn=>{const orig=window[fn];if(typeof orig==='function')window[fn]=function(id){const r=orig.apply(this,arguments);if(cloudRole==='teacher'&&id)setTimeout(async()=>{try{const d=localState();await api('update_progress',{learner_id:id,state:d[id]||{}});await refreshTeacher()}catch(e){console.warn('BASA teacher save:',e.message)}},120);return r}});
 const origOpen=window.openPupilAccount;if(typeof origOpen==='function')window.openPupilAccount=async function(id){if(cloudRole==='teacher'){try{const r=await api('get_progress',{learner_id:id});if(r.progress){const d=localState();d[id]={...(d[id]||{}),mar:r.progress.marungko||{},cl:r.progress.claveria||{},pg:r.progress.pagbasa||{}};putLocalState(d)}}catch(e){console.warn('BASA open pupil:',e.message)}}return origOpen.apply(this,arguments)};
