@@ -1,4 +1,4 @@
-const CACHE = "basa-track-v1";
+const CACHE = "basa-track-v2";
 const ASSETS = [
   "./",
   "./index.html",
