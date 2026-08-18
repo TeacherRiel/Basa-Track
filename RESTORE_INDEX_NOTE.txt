@@ -1,1 +1,1 @@
-Temporary note: the online app is being restored to the full reading build before the shared-data integration is finalized. Do not use real pupil data in the public trial.
+Restored the original full BASA-Track reading build. Cloud sync integration remains a separate development step.
