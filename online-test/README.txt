@@ -1,0 +1,1 @@
+Online dummy learner trial only. Uses the existing full BASA-Track reading build plus shared Supabase sync.
