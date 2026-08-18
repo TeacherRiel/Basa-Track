@@ -1,4 +1,4 @@
-const CACHE = "basa-track-v7";
+const CACHE = "basa-track-v8";
 const ASSETS = [
   "./manifest.json",
   "./icon-192.png",
@@ -16,7 +16,7 @@ async function patchDocument(response, request) {
   if (url.hostname.endsWith("github.io")) {
     const syncSrc = new URL("/Basa-Track/cloud-sync.js", url.origin).href;
     if (!text.includes("/Basa-Track/cloud-sync.js")) {
-      patched = patched.replace(/<\/head>/i, '<script src="' + syncSrc + '"></script></head>');
+      patched = patched.replace(/<\/body>/i, '<script src="' + syncSrc + '"></script></body>');
     }
   }
 
