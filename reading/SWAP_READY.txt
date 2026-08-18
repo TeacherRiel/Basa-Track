@@ -1,0 +1,1 @@
+The full reading blob is ready to be referenced by the Git tree for the dummy trial.
