@@ -1,0 +1,1 @@
+Trial reading build is mounted from the existing BASA-Track reading blob.
