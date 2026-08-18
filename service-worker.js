@@ -1,4 +1,4 @@
-const CACHE = "basa-track-v15";
+const CACHE = "basa-track-v16";
 const ASSETS = ["./manifest.json","./icon-192.png","./icon-512.png","./cloud-sync.js","./teacher-preview.js"];
 
 async function patchDocument(response, request){
