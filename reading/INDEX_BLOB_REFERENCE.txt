@@ -1,0 +1,1 @@
+The index entry below is replaced via Git tree from the existing BASA-Track full reading blob for the dummy trial.
