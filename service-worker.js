@@ -1,4 +1,4 @@
-const CACHE = "basa-track-v5";
+const CACHE = "basa-track-v6";
 const ASSETS = [
   "./manifest.json",
   "./icon-192.png",
@@ -14,9 +14,9 @@ async function patchDocument(response, request) {
   let patched = text;
   if (url.searchParams.get("learner") === "1") {
     patched = patched.replace(/<\/head>/i,
-      '<style id="basa-learner-only">#home button[onclick*="show(\'teacher\')"],#home button[onclick*="show(\\\'teacher\\\')"]{display:none!important}</style></head>');
+      '<style id="basa-learner-only">#home button:nth-of-type(2),#teacher,#teacherLogin,#pupilManager,#rosterEditor,#teacherBackBtn{display:none!important}</style></head>');
     patched = patched.replace(/<\/body>/i,
-      '<script>(function(){setTimeout(function(){try{document.querySelectorAll("#home button").forEach(function(b){if(/Teacher Dashboard/i.test(b.textContent||""))b.style.display="none"});if(typeof window.show==="function")window.show("login");}catch(e){}},300);})();</script></body>');
+      '<script>(function(){function hide(){try{document.querySelectorAll("#home button").forEach(function(b,i){if(i===1||/Teacher Dashboard/i.test(b.textContent||""))b.style.display="none"});["teacher","teacherLogin","pupilManager","rosterEditor","teacherBackBtn"].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display="none"});}catch(e){}}setTimeout(hide,50);setTimeout(hide,500);setTimeout(hide,1500);new MutationObserver(hide).observe(document.documentElement,{subtree:true,childList:true,attributes:true});})();</script></body>');
   }
   const headers = new Headers(response.headers);
   headers.set("content-type", "text/html; charset=utf-8");
