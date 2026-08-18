@@ -1,1 +1,0 @@
-Restored the original full BASA-Track reading build. Cloud sync integration remains a separate development step.
