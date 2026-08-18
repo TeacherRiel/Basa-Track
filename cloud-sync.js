@@ -1,4 +1,5 @@
 (function(){'use strict';
+if(window.__BASA_TRACK_CLOUD_SYNC__) return; window.__BASA_TRACK_CLOUD_SYNC__=true;
 const IS_ONLINE=location.hostname.includes('github.io'); if(!IS_ONLINE) return;
 const API='https://tpefvuspnvulalhwawqw.supabase.co/functions/v1/basa-track-api';
 const APIKEY='sb_publishable_3eEsgRPTMMgONilc2ao-ag_FeT1TShW';
