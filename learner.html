@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fil">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BASA-Track — Learner Access</title>
+<style>
+html,body{margin:0;height:100%;background:#eef3f8;font-family:Arial,sans-serif}
+#app{width:100%;height:100vh;border:0;display:block}
+</style>
+</head>
+<body>
+<iframe id="app" src="./index.html" title="BASA-Track Learner Access"></iframe>
+<script>
+const frame=document.getElementById('app');
+frame.addEventListener('load',()=>{
+  try{
+    const w=frame.contentWindow, d=frame.contentDocument;
+    const hide=()=>{
+      const teacherSection=d.getElementById('teacher');
+      if(teacherSection) teacherSection.style.display='none';
+      d.querySelectorAll('button').forEach(b=>{
+        const t=(b.textContent||'').toLowerCase();
+        if(t.includes('teacher dashboard')) b.style.display='none';
+      });
+      const original=w.show;
+      if(!w.__learnerGuarded && typeof original==='function'){
+        w.show=function(id){ if(id==='teacher') return; return original(id); };
+        w.__learnerGuarded=true;
+      }
+    };
+    hide();
+    new MutationObserver(hide).observe(d.documentElement,{subtree:true,childList:true,attributes:true});
+  }catch(e){console.warn('Learner view guard:',e)}
+});
+</script>
+</body>
+</html>
