@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BASA-Track Demo Teacher</title>
+<style>body{margin:0;font-family:Arial,sans-serif}#loading{padding:40px;text-align:center;font-size:22px}</style>
+</head><body>
+<div id="loading">Loading BASA-Track Teacher Demo…</div>
+<script>
+(async()=>{
+ const source='../BASA_TRACK_PRESENTATION_READY.html';
+ let html=await fetch(source,{cache:'no-store'}).then(r=>r.text());
+ html=html.replace(/const BASA_TRACK_ROSTER_KEY="[^"]+";/, 'const BASA_TRACK_ROSTER_KEY="BASA_TRACK_DEMO_ROSTER_V1";');
+ html=html.replace(/const CLASS_ROSTER=\[.*?\];/s, `const CLASS_ROSTER=[["G1-001","Ana Santos"],["G1-002","Marco Reyes"],["G1-003","Lea Cruz"],["G1-004","Carlo Garcia"],["G1-005","Mia Dela Cruz"]];`);
+ html=html.replace(/const DATA=\{.*?\};let current=null,mode=null;/s, `const DATA={"learners":{"G1-001":{"name":"Ana Santos","pin":"1001"},"G1-002":{"name":"Marco Reyes","pin":"1002"},"G1-003":{"name":"Lea Cruz","pin":"1003"},"G1-004":{"name":"Carlo Garcia","pin":"1004"},"G1-005":{"name":"Mia Dela Cruz","pin":"1005"}}};let current=null,mode=null;`);
+ html=html.replaceAll('BASA_TRACK_COMBINED_V2','BASA_TRACK_DEMO_DATA_V1').replaceAll('BASA_TRACK_COMBINED_V1','BASA_TRACK_DEMO_DATA_OLD_V1');
+ html=html.replace('</body>', '<script>window.addEventListener("load",function(){show("teacher");});</script></body>');
+ document.open();document.write(html);document.close();
+})().catch(e=>document.getElementById('loading').textContent='Unable to load BASA-Track Teacher Demo: '+e.message);
+</script></body></html>
