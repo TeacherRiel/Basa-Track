@@ -13,6 +13,12 @@
   html=html.replace(/"learners":\s*\{.*?\}\s*\}/s,`"learners":{\n  "G1-001":{"name":"Ana Santos","pin":"1001"},\n  "G1-002":{"name":"Marco Reyes","pin":"1002"},\n  "G1-003":{"name":"Lea Cruz","pin":"1003"},\n  "G1-004":{"name":"Carlo Garcia","pin":"1004"},\n  "G1-005":{"name":"Mia Dela Cruz","pin":"1005"}\n}}`);
   html=html.replace(/function teacher\(\)\{.*?\n\}/s,`function teacher(){loadRoster();renderRosterEditor();let d=db(),rows="";Object.keys(DATA.learners).forEach(id=>{let pupil=DATA.learners[id],x=d[id]||{},mc=pct((x.mar&&x.mar.done||[]).length,26),cc=pct((x.cl&&x.cl.validated)||0,DATA.claveria.checkpoints.length),pc=pct((x.pg&&x.pg.validated)||0,DATA.pagbasa.checkpoints.length),a=[];if(x.mar&&x.mar.pending&&!x.mar.approved)a.push('<button class="green" onclick="apMar(\\''+id+'\\')">Approve Marungko CP '+((x.mar.validated||0)+1)+'</button>');if(x.cl&&x.cl.pending)a.push('<button class="green" onclick="apCl(\\''+id+'\\')">Approve Claveria CP '+x.cl.cp+'</button>');if(x.pg&&x.pg.pending)a.push('<button class="green" onclick="apPg(\\''+id+'\\')">Approve Pagbasa CP '+x.pg.cp+'</button>');rows+='<tr><td><b>'+pupil.name+'</b><br>'+id+'</td><td>'+x.lastLogin+'</td><td>Marungko '+mc+'%<br>Claveria '+cc+'%<br>Pagbasa '+pc+'%</td><td>'+(a.length?a.join("<br>"):"No pending approval")+'</td></tr>';});document.getElementById("dash").innerHTML='<table><tr><th>Learner</th><th>Last Access</th><th>Progress</th><th>Teacher Validation</th></tr>'+rows+'</table>';}`);
   html=html.replace(/function show\(id\)\{.*?\n\}/s,`function show(id){["home","login","learner","teacher"].forEach(x=>document.getElementById(x).classList.add("hidden"));document.getElementById(id).classList.remove("hidden");if(id==="teacher")teacher();if(id==="login"){const q=new URLSearchParams(location.search).get("learner");if(q)document.getElementById("lid").value=q.trim().toUpperCase();}}`);
+  // Direct QR routing: teacher=1 opens Teacher Dashboard; learner=G1-xxx opens Learner Login.
+  const params=new URLSearchParams(location.search);
   document.open();document.write(html);document.close();
+  setTimeout(()=>{
+    if(params.get('teacher')==='1' && typeof show==='function') show('teacher');
+    else if(params.get('learner') && typeof show==='function') show('login');
+  },50);
 })().catch(e=>{document.getElementById('loading').textContent='Unable to load BASA-Track demo: '+e.message});
 </script></body></html>
