@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BASA-Track School Demonstration — 5 Learners</title>
+<style>
+html,body{margin:0;width:100%;height:100%;background:#f5f7fb;font-family:Arial,sans-serif}
+#frame{width:100%;height:100%;border:0;display:block}
+#status{position:fixed;z-index:10;left:12px;bottom:12px;background:#fff;padding:8px 12px;border-radius:10px;box-shadow:0 2px 12px #0002;font-size:12px}
+</style>
+</head>
+<body>
+<iframe id="frame" title="BASA-Track Demonstration"></iframe>
+<div id="status">BASA-Track Demo • 1 Teacher + 5 Learners</div>
+<script>
+const DEMO_URL='../BASA_TRACK_PRESENTATION_READY.html';
+const learners={
+ 'G1-001':{name:'Ana Santos',pin:'1111'},
+ 'G1-002':{name:'Marco Reyes',pin:'2222'},
+ 'G1-003':{name:'Lea Cruz',pin:'3333'},
+ 'G1-004':{name:'Carlo Garcia',pin:'4444'},
+ 'G1-005':{name:'Mia Dela Cruz',pin:'5555'}
+};
+const frame=document.getElementById('frame');
+frame.src=DEMO_URL;
+frame.addEventListener('load',()=>{
+  try{
+    const w=frame.contentWindow;
+    w.eval(`
+      Object.assign(DATA.learners, ${JSON.stringify(learners)});
+      localStorage.setItem('BASA_TRACK_COMBINED_V2', JSON.stringify(db()));
+      const loginSection=document.getElementById('login');
+      if(loginSection){
+        const p=loginSection.querySelector('p');
+        if(p) p.innerHTML='<b>Demo accounts:</b> G1-001 / 1111, G1-002 / 2222, G1-003 / 3333, G1-004 / 4444, G1-005 / 5555';
+      }
+      if(typeof renderTeacher==='function') renderTeacher();
+    `);
+  }catch(e){
+    document.getElementById('status').textContent='BASA-Track Demo • Please refresh once';
+  }
+});
+</script>
+</body>
+</html>
