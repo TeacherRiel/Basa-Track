@@ -1,64 +1,18 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BASA-Track School Demonstration — 1 Teacher + 5 Learners</title>
-<style>
-html,body{margin:0;width:100%;height:100%;background:#f5f7fb;font-family:Arial,sans-serif}
-#frame{width:100%;height:100%;border:0;display:block}
-#status{position:fixed;z-index:20;left:12px;bottom:12px;background:#fff;padding:8px 12px;border-radius:10px;box-shadow:0 2px 12px #0002;font-size:12px}
-</style>
-</head>
-<body>
-<iframe id="frame" title="BASA-Track School Demonstration"></iframe>
-<div id="status">BASA-Track Demo • 1 Teacher + 5 Learners</div>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BASA-Track School Demonstration</title></head>
+<body style="margin:0;font-family:Arial,sans-serif"><div id="loading" style="padding:40px;text-align:center;font-size:22px">Loading BASA-Track School Demonstration…</div>
 <script>
-// IMPORTANT: this demo uses its own storage keys so it cannot overwrite
-// the classroom/demo data stored by the original BASA-Track page.
-const DEMO_ROSTER_KEY='BASA_TRACK_DEMO_ROSTER_V1';
-const DEMO_DATA_KEY='BASA_TRACK_DEMO_COMBINED_V1';
-const learners={
- 'G1-001':{name:'Ana Santos',pin:'1001'},
- 'G1-002':{name:'Marco Reyes',pin:'1002'},
- 'G1-003':{name:'Lea Cruz',pin:'1003'},
- 'G1-004':{name:'Carlo Garcia',pin:'1004'},
- 'G1-005':{name:'Mia Dela Cruz',pin:'1005'}
-};
-const frame=document.getElementById('frame');
-const status=document.getElementById('status');
-frame.src='../BASA_TRACK_PRESENTATION_READY.html';
-frame.addEventListener('load',()=>{
-  try{
-    const w=frame.contentWindow;
-    const StorageProto=w.Storage.prototype;
-    if(!StorageProto.__basaDemoPatched){
-      const get=StorageProto.getItem, set=StorageProto.setItem, remove=StorageProto.removeItem;
-      const map=k=>({
-        'BASA_TRACK_ROSTER_V2':DEMO_ROSTER_KEY,
-        'BASA_TRACK_COMBINED_V2':DEMO_DATA_KEY,
-        'BASA_TRACK_COMBINED_V1':DEMO_DATA_KEY
-      }[k]||k);
-      StorageProto.getItem=function(k){return get.call(this,map(k));};
-      StorageProto.setItem=function(k,v){return set.call(this,map(k),v);};
-      StorageProto.removeItem=function(k){return remove.call(this,map(k));};
-      StorageProto.__basaDemoPatched=true;
-    }
-    // Seed only the DEMO roster. Real classroom roster is never used by this demo.
-    w.localStorage.setItem(DEMO_ROSTER_KEY,JSON.stringify(learners));
-    w.localStorage.setItem(DEMO_DATA_KEY,w.localStorage.getItem(DEMO_DATA_KEY)||'{}');
-    w.DATA.learners=JSON.parse(JSON.stringify(learners));
-    if(typeof w.loadRoster==='function') w.loadRoster();
-    if(typeof w.renderRosterEditor==='function') w.renderRosterEditor();
-    if(typeof w.show==='function') w.show('home');
-    const p=w.document.querySelector('#login p');
-    if(p) p.innerHTML='<b>Demo accounts:</b> G1-001 / 1001, G1-002 / 1002, G1-003 / 1003, G1-004 / 1004, G1-005 / 1005';
-    status.textContent='BASA-Track Demo • 1 Teacher + 5 Learners • SAFE DEMO DATA';
-  }catch(e){
-    status.textContent='BASA-Track Demo • Please refresh once';
-    console.error(e);
-  }
-});
-</script>
-</body>
-</html>
+(async()=>{
+  const source='../BASA_TRACK_PRESENTATION_READY.html';
+  let html=await fetch(source,{cache:'no-store'}).then(r=>r.text());
+  html=html.replaceAll('BASA_TRACK_ROSTER_V2','BASA_TRACK_DEMO_ROSTER_V1')
+           .replaceAll('BASA_TRACK_COMBINED_V2','BASA_TRACK_DEMO_DATA_V1')
+           .replaceAll('BASA_TRACK_COMBINED_V1','BASA_TRACK_DEMO_DATA_OLD_V1');
+  html=html.replace(/const CLASS_ROSTER=\[.*?\];/s,`const CLASS_ROSTER=[\n  ["G1-001","Ana Santos"],\n  ["G1-002","Marco Reyes"],\n  ["G1-003","Lea Cruz"],\n  ["G1-004","Carlo Garcia"],\n  ["G1-005","Mia Dela Cruz"]\n];`);
+  html=html.replace(/"learners":\s*\{.*?\}\s*\}/s,`"learners":{\n  "G1-001":{"name":"Ana Santos","pin":"1001"},\n  "G1-002":{"name":"Marco Reyes","pin":"1002"},\n  "G1-003":{"name":"Lea Cruz","pin":"1003"},\n  "G1-004":{"name":"Carlo Garcia","pin":"1004"},\n  "G1-005":{"name":"Mia Dela Cruz","pin":"1005"}\n}}`);
+  html=html.replace(/function teacher\(\)\{.*?\n\}/s,`function teacher(){loadRoster();renderRosterEditor();let d=db(),rows="";Object.keys(DATA.learners).forEach(id=>{let pupil=DATA.learners[id],x=d[id]||{},mc=pct((x.mar&&x.mar.done||[]).length,26),cc=pct((x.cl&&x.cl.validated)||0,DATA.claveria.checkpoints.length),pc=pct((x.pg&&x.pg.validated)||0,DATA.pagbasa.checkpoints.length),a=[];if(x.mar&&x.mar.pending&&!x.mar.approved)a.push('<button class="green" onclick="apMar(\\''+id+'\\')">Approve Marungko CP '+((x.mar.validated||0)+1)+'</button>');if(x.cl&&x.cl.pending)a.push('<button class="green" onclick="apCl(\\''+id+'\\')">Approve Claveria CP '+x.cl.cp+'</button>');if(x.pg&&x.pg.pending)a.push('<button class="green" onclick="apPg(\\''+id+'\\')">Approve Pagbasa CP '+x.pg.cp+'</button>');rows+='<tr><td><b>'+pupil.name+'</b><br>'+id+'</td><td>'+x.lastLogin+'</td><td>Marungko '+mc+'%<br>Claveria '+cc+'%<br>Pagbasa '+pc+'%</td><td>'+(a.length?a.join("<br>"):"No pending approval")+'</td></tr>';});document.getElementById("dash").innerHTML='<table><tr><th>Learner</th><th>Last Access</th><th>Progress</th><th>Teacher Validation</th></tr>'+rows+'</table>';}`);
+  html=html.replace(/function show\(id\)\{.*?\n\}/s,`function show(id){["home","login","learner","teacher"].forEach(x=>document.getElementById(x).classList.add("hidden"));document.getElementById(id).classList.remove("hidden");if(id==="teacher")teacher();if(id==="login"){const q=new URLSearchParams(location.search).get("learner");if(q)document.getElementById("lid").value=q.trim().toUpperCase();}}`);
+  document.open();document.write(html);document.close();
+})().catch(e=>{document.getElementById('loading').textContent='Unable to load BASA-Track demo: '+e.message});
+</script></body></html>
