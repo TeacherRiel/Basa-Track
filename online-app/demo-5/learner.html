@@ -17,11 +17,21 @@
  html=html.replace(/"learners":\s*\{.*?\}\s*\}/s,`"learners":{\n  "G1-001":{"name":"Ana Santos","pin":"1001"},\n  "G1-002":{"name":"Marco Reyes","pin":"1002"},\n  "G1-003":{"name":"Lea Cruz","pin":"1003"},\n  "G1-004":{"name":"Carlo Garcia","pin":"1004"},\n  "G1-005":{"name":"Mia Dela Cruz","pin":"1005"}\n}}`);
  document.open();document.write(html);document.close();
  setTimeout(()=>{
-  const style=document.createElement('style');
-  style.textContent='#home button[onclick*=teacher],#home button[onclick*=Teacher],#teacher{display:none!important}#home{display:none!important}';
-  document.head.appendChild(style);
+  // Learner-only route: remove/hide every Teacher Dashboard control and teacher view.
+  document.querySelectorAll('button,a').forEach(el=>{
+    const t=(el.textContent||'').trim().toLowerCase();
+    if(t.includes('teacher dashboard')||t.includes('teacher login')) el.style.display='none';
+  });
+  const teacherView=document.getElementById('teacher');
+  if(teacherView) teacherView.style.display='none';
+  const home=document.getElementById('home');
+  if(home) home.style.display='none';
   const q=new URLSearchParams(location.search).get('learner');
-  if(q&&typeof show==='function'){show('login');const el=document.getElementById('lid');if(el)el.value=q.trim().toUpperCase();}
- },50);
+  if(q&&typeof show==='function'){
+    show('login');
+    const el=document.getElementById('lid');
+    if(el) el.value=q.trim().toUpperCase();
+  }
+ },100);
 })().catch(e=>document.getElementById('loading').textContent='Unable to load BASA-Track learner demo: '+e.message);
 </script></body></html>
